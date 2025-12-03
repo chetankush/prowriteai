@@ -1,0 +1,21 @@
+// Re-export types from database module for backward compatibility
+export {
+  BrandVoiceGuide,
+  PlanType,
+  SubscriptionStatus,
+  ModuleType,
+  GenerationStatus,
+  MessageRole,
+  InputField,
+  InputSchema,
+  WorkspaceRow as Workspace,
+  SubscriptionRow as Subscription,
+  TemplateRow as Template,
+  GenerationRow as Generation,
+  ConversationRow as Conversation,
+  MessageRow as Message,
+  GeneratedContent,
+  ConversationInsert,
+  ConversationUpdate,
+  MessageInsert,
+} from '../database';
