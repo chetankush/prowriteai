@@ -40,7 +40,6 @@ const DialogContext = React.createContext<{
 } | null>(null);
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
-  // Handle escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
@@ -50,6 +49,18 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [open, onOpenChange]);
+
+  // Prevent body scroll when dialog is open
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -65,23 +76,23 @@ export function DialogContent({ children, className }: DialogContentProps) {
   if (!context) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in-0"
         onClick={() => context.onOpenChange(false)}
       />
       {/* Content */}
       <div
         className={cn(
-          'relative z-50 w-full max-w-md rounded-lg border bg-background p-6 shadow-lg',
+          'relative z-50 w-full max-w-md rounded-xl border border-violet-500/40 bg-card p-6 shadow-2xl shadow-violet-500/10 animate-in fade-in-0 zoom-in-95',
           className
         )}
       >
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-2 h-6 w-6"
+          className="absolute right-3 top-3 h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
           onClick={() => context.onOpenChange(false)}
         >
           <X className="h-4 w-4" />
@@ -94,7 +105,7 @@ export function DialogContent({ children, className }: DialogContentProps) {
 
 export function DialogHeader({ children, className }: DialogHeaderProps) {
   return (
-    <div className={cn('mb-4 space-y-1.5', className)}>
+    <div className={cn('mb-4 space-y-1.5 pr-8', className)}>
       {children}
     </div>
   );
@@ -102,7 +113,7 @@ export function DialogHeader({ children, className }: DialogHeaderProps) {
 
 export function DialogTitle({ children, className }: DialogTitleProps) {
   return (
-    <h2 className={cn('text-lg font-semibold', className)}>
+    <h2 className={cn('text-lg font-semibold text-foreground', className)}>
       {children}
     </h2>
   );
@@ -118,7 +129,7 @@ export function DialogDescription({ children, className }: DialogDescriptionProp
 
 export function DialogFooter({ children, className }: DialogFooterProps) {
   return (
-    <div className={cn('mt-6 flex justify-end gap-2', className)}>
+    <div className={cn('mt-6 flex justify-end gap-3', className)}>
       {children}
     </div>
   );
@@ -130,7 +141,5 @@ interface DialogTriggerProps {
 }
 
 export function DialogTrigger({ children, asChild }: DialogTriggerProps) {
-  // This is a simplified trigger - in a real implementation you'd use Radix UI
-  // For now, we'll just render the children as-is since the parent handles open state
   return <>{children}</>;
 }

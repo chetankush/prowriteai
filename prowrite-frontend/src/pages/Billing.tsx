@@ -1,15 +1,11 @@
 import { useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { CreditCard, Calendar, AlertCircle, CheckCircle } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { CreditCard, Calendar, AlertCircle, CheckCircle, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PricingPlans, type PlanDetails } from '@/components'
 import api from '@/lib/api'
 
-/**
- * Subscription info interface matching backend SubscriptionInfo
- */
 interface SubscriptionInfo {
   id: string
   plan_type: string
@@ -20,17 +16,11 @@ interface SubscriptionInfo {
   usage_limit: number
 }
 
-/**
- * Checkout session response
- */
 interface CheckoutSessionResponse {
   sessionId: string
   url: string
 }
 
-/**
- * Format date for display
- */
 function formatDate(dateString: string | null): string {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -40,25 +30,19 @@ function formatDate(dateString: string | null): string {
   })
 }
 
-/**
- * Get status badge color
- */
 function getStatusColor(status: string): string {
   switch (status) {
     case 'active':
-      return 'bg-green-100 text-green-800'
+      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
     case 'canceled':
-      return 'bg-amber-100 text-amber-800'
+      return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
     case 'past_due':
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-500/10 text-red-400 border-red-500/20'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-secondary text-muted-foreground border-border'
   }
 }
 
-/**
- * Get plan display name
- */
 function getPlanDisplayName(planType: string): string {
   const names: Record<string, string> = {
     free: 'Free',
@@ -69,17 +53,11 @@ function getPlanDisplayName(planType: string): string {
   return names[planType] || planType
 }
 
-/**
- * BillingPage component
- * Displays current subscription status, billing period, and upgrade options
- * Requirements: 9.1, 9.2, 9.5
- */
 export function BillingPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const successParam = searchParams.get('success')
   const canceledParam = searchParams.get('canceled')
 
-  // Clear URL params after showing message
   useEffect(() => {
     if (successParam || canceledParam) {
       const timer = setTimeout(() => {
@@ -89,7 +67,6 @@ export function BillingPage() {
     }
   }, [successParam, canceledParam, setSearchParams])
 
-  // Fetch available plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<PlanDetails[]>({
     queryKey: ['billing-plans'],
     queryFn: async () => {
@@ -98,7 +75,6 @@ export function BillingPage() {
     },
   })
 
-  // Fetch current subscription
   const { data: subscription, isLoading: subscriptionLoading, refetch: refetchSubscription } = useQuery<SubscriptionInfo>({
     queryKey: ['subscription'],
     queryFn: async () => {
@@ -107,21 +83,18 @@ export function BillingPage() {
     },
   })
 
-  // Create checkout session mutation
   const createCheckout = useMutation({
     mutationFn: async (planType: string): Promise<CheckoutSessionResponse> => {
       const response = await api.post('/billing/subscribe', { plan_type: planType })
       return response.data
     },
     onSuccess: (data) => {
-      // Redirect to Stripe checkout
       if (data.url) {
         window.location.href = data.url
       }
     },
   })
 
-  // Cancel subscription mutation
   const cancelSubscription = useMutation({
     mutationFn: async () => {
       const response = await api.post('/billing/cancel')
@@ -145,63 +118,79 @@ export function BillingPage() {
   const isLoading = plansLoading || subscriptionLoading
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Billing & Subscription</h1>
-        <p className="text-muted-foreground">Manage your subscription plan and billing information</p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 md:p-6 pb-8">
+        <div className="space-y-8 max-w-5xl">
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Billing & Subscription</h1>
+            <p className="text-muted-foreground mt-1">Manage your plan and billing information</p>
+          </div>
 
       {/* Success/Cancel Messages */}
       {successParam === 'true' && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-800 border border-green-200 rounded-md">
-          <CheckCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl">
+          <CheckCircle className="h-5 w-5 shrink-0" />
           <span>Your subscription has been updated successfully!</span>
         </div>
       )}
 
       {canceledParam === 'true' && (
-        <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
-          <AlertCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-xl">
+          <AlertCircle className="h-5 w-5 shrink-0" />
           <span>Checkout was canceled. No changes were made to your subscription.</span>
         </div>
       )}
 
       {/* Current Subscription Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Current Subscription
-          </CardTitle>
-          <CardDescription>Your active plan and billing details</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <div className="p-6 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-600/20 flex items-center justify-center">
+              <CreditCard className="h-5 w-5 text-violet-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Current Subscription</h2>
+              <p className="text-sm text-muted-foreground">Your active plan and billing details</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
           {subscriptionLoading ? (
-            <p className="text-muted-foreground">Loading subscription info...</p>
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <span className="text-muted-foreground">Loading subscription info...</span>
+            </div>
           ) : subscription ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Plan */}
-                <div>
-                  <p className="text-sm text-muted-foreground">Plan</p>
-                  <p className="text-lg font-semibold">{getPlanDisplayName(subscription.plan_type)}</p>
+                <div className="p-4 rounded-lg bg-secondary/30">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Plan</p>
+                  <p className="text-xl font-semibold text-foreground">{getPlanDisplayName(subscription.plan_type)}</p>
                 </div>
 
                 {/* Status */}
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(subscription.status)}`}>
+                <div className="p-4 rounded-lg bg-secondary/30">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium capitalize border ${getStatusColor(subscription.status)}`}>
                     {subscription.status}
                   </span>
                 </div>
 
                 {/* Usage */}
-                <div>
-                  <p className="text-sm text-muted-foreground">Usage This Period</p>
-                  <p className="text-lg font-semibold">
-                    {subscription.usage_count} / {subscription.usage_limit === 999999 ? '∞' : subscription.usage_limit}
-                  </p>
+                <div className="p-4 rounded-lg bg-secondary/30">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Usage</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-semibold text-foreground">{subscription.usage_count}</span>
+                    <span className="text-muted-foreground">/ {subscription.usage_limit === 999999 ? '∞' : subscription.usage_limit}</span>
+                  </div>
+                  <div className="w-full bg-secondary/50 rounded-full h-1.5 mt-2">
+                    <div
+                      className="bg-gradient-to-r from-violet-500 to-purple-600 h-1.5 rounded-full transition-all"
+                      style={{ width: `${Math.min((subscription.usage_count / subscription.usage_limit) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -217,14 +206,14 @@ export function BillingPage() {
                 </div>
               )}
 
-              {/* Cancel Button (only for paid plans) */}
+              {/* Cancel Button */}
               {subscription.plan_type !== 'free' && subscription.status === 'active' && (
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t border-border/50">
                   <Button
                     variant="outline"
                     onClick={handleCancelSubscription}
                     disabled={cancelSubscription.isPending}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                   >
                     {cancelSubscription.isPending ? 'Canceling...' : 'Cancel Subscription'}
                   </Button>
@@ -237,14 +226,25 @@ export function BillingPage() {
           ) : (
             <p className="text-muted-foreground">No subscription found</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Pricing Plans */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-600/20 flex items-center justify-center">
+            <Zap className="h-5 w-5 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Available Plans</h2>
+            <p className="text-sm text-muted-foreground">Choose the plan that fits your needs</p>
+          </div>
+        </div>
         {isLoading ? (
-          <p className="text-muted-foreground">Loading plans...</p>
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="text-muted-foreground">Loading plans...</span>
+          </div>
         ) : (
           <PricingPlans
             plans={plans}
@@ -258,18 +258,20 @@ export function BillingPage() {
 
       {/* Error Messages */}
       {createCheckout.isError && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md">
-          <AlertCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl">
+          <AlertCircle className="h-5 w-5 shrink-0" />
           <span>Failed to create checkout session. Please try again.</span>
         </div>
       )}
 
       {cancelSubscription.isError && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md">
-          <AlertCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl">
+          <AlertCircle className="h-5 w-5 shrink-0" />
           <span>Failed to cancel subscription. Please try again.</span>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

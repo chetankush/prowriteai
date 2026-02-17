@@ -1,5 +1,8 @@
 export { ProtectedRoute } from './ProtectedRoute'
+export { ErrorBoundary } from './ErrorBoundary'
 export { DashboardLayout } from './layout'
+export { ThemeProvider } from './ThemeProvider'
+export { ThemeToggle, ThemeToggleButton } from './ThemeToggle'
 export {
   DynamicForm,
   GenerationResult,
@@ -31,3 +34,5 @@ export type {
 } from './chat'
 export { PricingPlans } from './billing'
 export type { PlanDetails } from './billing'
+export { DocumentEditor, DocumentVersions } from './documents'
+export { ActivityFeed, ComplianceDashboard } from './admin'

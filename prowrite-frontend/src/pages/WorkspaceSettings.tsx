@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Settings, Zap, Palette, CheckCircle, AlertCircle } from 'lucide-react'
 import api from '@/lib/api'
 
-// Types matching backend DTOs
 interface BrandVoiceGuide {
   tone: string
   style: string
@@ -34,63 +33,62 @@ interface UsageStats {
   percentage_used: number
 }
 
-/**
- * UsageDashboard component
- * Displays current usage count and limit with progress bar
- * Requirements: 2.5
- */
 function UsageDashboard({ stats }: { stats: UsageStats | undefined }) {
   if (!stats) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage Statistics</CardTitle>
-          <CardDescription>Loading usage data...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+        <div className="flex items-center gap-3">
+          <div className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground">Loading usage data...</span>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Usage Statistics</CardTitle>
-        <CardDescription>Your chat message usage this billing period</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-600/20 flex items-center justify-center">
+            <Zap className="h-5 w-5 text-violet-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Usage Statistics</h2>
+            <p className="text-sm text-muted-foreground">Your chat message usage this billing period</p>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 space-y-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Messages Used</span>
-          <span className="font-medium">{stats.usage_count} / {stats.usage_limit}</span>
+          <span className="font-medium text-foreground">{stats.usage_count} / {stats.usage_limit}</span>
         </div>
         
-        {/* Progress bar */}
-        <div className="w-full bg-secondary rounded-full h-3">
+        <div className="w-full bg-secondary/50 rounded-full h-2">
           <div
-            className="bg-primary h-3 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-violet-500 to-purple-600 h-2 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(stats.percentage_used, 100)}%` }}
           />
         </div>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Remaining</span>
-          <span className="font-medium text-green-600">{stats.remaining} messages</span>
+          <span className="font-medium text-emerald-400">{stats.remaining} messages</span>
         </div>
         
         {stats.percentage_used >= 80 && (
-          <p className="text-sm text-amber-600">
-            You've used {stats.percentage_used}% of your limit. Consider upgrading your plan.
-          </p>
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-400">
+              You've used {stats.percentage_used}% of your limit. Consider upgrading your plan.
+            </p>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
-/**
- * BrandVoiceEditor component
- * Form for editing tone, style, terminology, and avoid fields
- * Requirements: 2.3
- */
 function BrandVoiceEditor({
   brandVoice,
   onChange,
@@ -125,21 +123,27 @@ function BrandVoiceEditor({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Brand Voice Guide</CardTitle>
-        <CardDescription>
-          Define your brand's tone and style for consistent AI-generated content
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-pink-500/20 to-rose-600/20 flex items-center justify-center">
+            <Palette className="h-5 w-5 text-pink-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Brand Voice Guide</h2>
+            <p className="text-sm text-muted-foreground">Define your brand's tone and style for consistent AI-generated content</p>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="tone">Tone</Label>
+          <Label htmlFor="tone" className="text-sm font-medium">Tone</Label>
           <Input
             id="tone"
             placeholder="e.g., professional, friendly, casual"
             value={tone}
             onChange={(e) => setTone(e.target.value)}
+            className="h-11 bg-secondary/30 border-border/50"
           />
           <p className="text-xs text-muted-foreground">
             The overall feeling of your content (professional, casual, friendly, etc.)
@@ -147,12 +151,13 @@ function BrandVoiceEditor({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="style">Style</Label>
+          <Label htmlFor="style" className="text-sm font-medium">Style</Label>
           <Input
             id="style"
             placeholder="e.g., concise, detailed, conversational"
             value={style}
             onChange={(e) => setStyle(e.target.value)}
+            className="h-11 bg-secondary/30 border-border/50"
           />
           <p className="text-xs text-muted-foreground">
             How your content is structured (concise, detailed, conversational, etc.)
@@ -160,13 +165,14 @@ function BrandVoiceEditor({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="terminology">Preferred Terminology</Label>
+          <Label htmlFor="terminology" className="text-sm font-medium">Preferred Terminology</Label>
           <Textarea
             id="terminology"
             placeholder="e.g., customers, clients, users (comma-separated)"
             value={terminology}
             onChange={(e) => setTerminology(e.target.value)}
             rows={3}
+            className="bg-secondary/30 border-border/50"
           />
           <p className="text-xs text-muted-foreground">
             Industry-specific terms or preferred words (comma-separated)
@@ -174,40 +180,38 @@ function BrandVoiceEditor({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="avoid">Words to Avoid</Label>
+          <Label htmlFor="avoid" className="text-sm font-medium">Words to Avoid</Label>
           <Textarea
             id="avoid"
             placeholder="e.g., cheap, basic, simple (comma-separated)"
             value={avoid}
             onChange={(e) => setAvoid(e.target.value)}
             rows={3}
+            className="bg-secondary/30 border-border/50"
           />
           <p className="text-xs text-muted-foreground">
             Words or phrases to avoid in generated content (comma-separated)
           </p>
         </div>
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleSave} disabled={isLoading}>
+
+        <Button 
+          onClick={handleSave} 
+          disabled={isLoading}
+          className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+        >
           {isLoading ? 'Saving...' : 'Save Brand Voice'}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   )
 }
 
-/**
- * WorkspaceSettingsPage component
- * Main settings page displaying workspace details, brand voice editor, and usage stats
- * Requirements: 2.1, 2.2, 2.3, 2.5
- */
 export function WorkspaceSettingsPage() {
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Fetch workspace data
   const { data: workspace, isLoading: workspaceLoading } = useQuery<Workspace>({
     queryKey: ['workspace'],
     queryFn: async () => {
@@ -216,7 +220,6 @@ export function WorkspaceSettingsPage() {
     },
   })
 
-  // Fetch usage stats
   const { data: usageStats } = useQuery<UsageStats>({
     queryKey: ['workspace-usage'],
     queryFn: async () => {
@@ -225,7 +228,6 @@ export function WorkspaceSettingsPage() {
     },
   })
 
-  // Update workspace mutation
   const updateWorkspace = useMutation({
     mutationFn: async (data: { name?: string; description?: string; brand_voice_guide?: BrandVoiceGuide }) => {
       const response = await api.put('/workspace', data)
@@ -242,7 +244,6 @@ export function WorkspaceSettingsPage() {
     },
   })
 
-  // Initialize form with workspace data
   useEffect(() => {
     if (workspace) {
       setName(workspace.name || '')
@@ -260,31 +261,37 @@ export function WorkspaceSettingsPage() {
 
   if (workspaceLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Workspace Settings</h1>
-          <p className="text-muted-foreground">Loading...</p>
+          <h1 className="text-2xl font-semibold text-foreground">Workspace Settings</h1>
+          <p className="text-muted-foreground mt-1">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Workspace Settings</h1>
-        <p className="text-muted-foreground">Manage your workspace configuration and brand voice</p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 md:p-6 pb-8">
+        <div className="space-y-8 max-w-4xl">
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Workspace Settings</h1>
+            <p className="text-muted-foreground mt-1">Manage your workspace configuration and brand voice</p>
+          </div>
 
-      {saveMessage && (
-        <div
-          className={`p-4 rounded-md ${
-            saveMessage.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-        >
-          {saveMessage.text}
+          {saveMessage && (
+            <div className={`flex items-center gap-3 p-4 rounded-xl border ${
+              saveMessage.type === 'success'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                : 'bg-destructive/10 text-destructive border-destructive/20'
+            }`}>
+              {saveMessage.type === 'success' ? (
+                <CheckCircle className="h-5 w-5 shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 shrink-0" />
+          )}
+          <span>{saveMessage.text}</span>
         </div>
       )}
 
@@ -292,39 +299,51 @@ export function WorkspaceSettingsPage() {
       <UsageDashboard stats={usageStats} />
 
       {/* Workspace Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Workspace Details</CardTitle>
-          <CardDescription>Basic information about your workspace</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <div className="p-6 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-600/20 flex items-center justify-center">
+              <Settings className="h-5 w-5 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Workspace Details</h2>
+              <p className="text-sm text-muted-foreground">Basic information about your workspace</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="workspace-name">Workspace Name</Label>
+            <Label htmlFor="workspace-name" className="text-sm font-medium">Workspace Name</Label>
             <Input
               id="workspace-name"
               placeholder="My Workspace"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="h-11 bg-secondary/30 border-border/50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="workspace-description">Description</Label>
+            <Label htmlFor="workspace-description" className="text-sm font-medium">Description</Label>
             <Textarea
               id="workspace-description"
               placeholder="A brief description of your workspace"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              className="bg-secondary/30 border-border/50"
             />
           </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleSaveDetails} disabled={updateWorkspace.isPending}>
+
+          <Button 
+            onClick={handleSaveDetails} 
+            disabled={updateWorkspace.isPending}
+            className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+          >
             {updateWorkspace.isPending ? 'Saving...' : 'Save Details'}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
       {/* Brand Voice Editor */}
       <BrandVoiceEditor
@@ -332,6 +351,8 @@ export function WorkspaceSettingsPage() {
         onChange={handleSaveBrandVoice}
         isLoading={updateWorkspace.isPending}
       />
+        </div>
+      </div>
     </div>
   )
 }

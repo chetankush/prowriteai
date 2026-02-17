@@ -38,10 +38,9 @@ export function useAuth(): UseAuth {
 
       // Store the backend JWT token
       setBackendToken(response.data.access_token)
-      console.log('Backend sync successful, workspace:', response.data.workspace_id)
       return true
-    } catch (apiError) {
-      console.error('Backend sync error:', apiError)
+    } catch (err) {
+      console.error('[useAuth] syncWithBackend failed:', err)
       return false
     }
   }
@@ -60,7 +59,7 @@ export function useAuth(): UseAuth {
           await syncWithBackend(session.access_token)
         }
       } catch (err) {
-        console.error('Error getting session:', err)
+        console.error('[useAuth] initializeAuth failed:', err)
       } finally {
         setLoading(false)
       }
@@ -97,29 +96,31 @@ export function useAuth(): UseAuth {
     setLoading(true)
 
     try {
+      console.log('[useAuth] signUp: attempting signup for', email)
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
       })
 
       if (authError) {
-        setError('Unable to create account. Please try again.')
+        console.error('[useAuth] signUp: Supabase auth error:', authError.message, authError)
+        setError(authError.message || 'Unable to create account. Please try again.')
         setLoading(false)
         throw authError
       }
 
+      console.log('[useAuth] signUp: Supabase response:', { user: !!data.user, session: !!data.session, userId: data.user?.id })
+
       // If signup successful and we have a session, sync with backend
       // Don't fail signup if backend sync fails
       if (data.session) {
-        const syncSuccess = await syncWithBackend(data.session.access_token)
-        if (!syncSuccess) {
-          console.warn('Backend sync failed, but signup succeeded')
-        }
+        await syncWithBackend(data.session.access_token)
       }
 
       setLoading(false)
       return { user: data.user, session: data.session }
     } catch (err) {
+      console.error('[useAuth] signUp: unexpected error:', err)
       setLoading(false)
       throw err
     }
@@ -130,28 +131,30 @@ export function useAuth(): UseAuth {
     setLoading(true)
 
     try {
+      console.log('[useAuth] login: attempting login for', email)
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (authError) {
+        console.error('[useAuth] login: Supabase auth error:', authError.message, authError)
         setError('Invalid email or password')
         setLoading(false)
         throw authError
       }
 
+      console.log('[useAuth] login: success, syncing with backend')
+
       // Sync with backend - don't fail login if backend sync fails
       if (data.session) {
-        const syncSuccess = await syncWithBackend(data.session.access_token)
-        if (!syncSuccess) {
-          console.warn('Backend sync failed, but login succeeded')
-        }
+        await syncWithBackend(data.session.access_token)
       }
 
       setLoading(false)
       return { user: data.user, session: data.session }
     } catch (err) {
+      console.error('[useAuth] login: unexpected error:', err)
       setLoading(false)
       throw err
     }
@@ -172,6 +175,7 @@ export function useAuth(): UseAuth {
       clearBackendToken()
       window.location.href = '/login'
     } catch (err) {
+      console.error('[useAuth] logout: failed:', err)
       const authErr = err as AuthError
       setError(authErr.message)
       throw authErr

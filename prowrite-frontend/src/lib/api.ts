@@ -42,21 +42,18 @@ api.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.log('Using backend token for request:', config.url)
     } else {
       // Fallback to Supabase token for initial auth
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
         config.headers.Authorization = `Bearer ${session.access_token}`
-        console.log('Using Supabase token for request:', config.url)
-      } else {
-        console.log('No token available for request:', config.url)
       }
     }
     
     return config
   },
   (error) => {
+    console.error('[API] Request interceptor error:', error)
     return Promise.reject(error)
   }
 )
@@ -66,13 +63,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const status = error.response?.status
-    
+    const url = error.config?.url
+    console.error(`[API] Response error: ${status} ${error.message} (${url})`, error.response?.data)
+
     if (status === 401) {
       // Token expired or invalid - clear and redirect to login
+      console.warn('[API] 401 Unauthorized - clearing token and redirecting to login')
       clearBackendToken()
       window.location.href = '/login'
     }
-    
+
     return Promise.reject(error)
   }
 )
